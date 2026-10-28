@@ -9,6 +9,7 @@ function common_trace!(
     options::Options,
     curr_time = time(),
 )
+    _NUMERIC_EXPORT_MODE && return nothing
     dt = Dict()
     dt["time"] = curr_time
     if options.extended_trace

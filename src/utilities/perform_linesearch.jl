@@ -73,7 +73,7 @@ function perform_linesearch!(state, method, d)
         _linesearch_moved_x(state)
     catch ex
         if ex isa LineSearches.LineSearchException
-            state.alpha = ex.alpha
+            state.alpha = _NUMERIC_EXPORT_MODE ? (ex::LineSearches.LineSearchException{typeof(state.alpha)}).alpha : ex.alpha
             false
         else
             rethrow()
@@ -90,7 +90,7 @@ function perform_linesearch!(state, method, d)
             _linesearch_moved_x(state)
         catch ex2
             if ex2 isa LineSearches.LineSearchException
-                state.alpha = ex2.alpha
+                state.alpha = _NUMERIC_EXPORT_MODE ? (ex2::LineSearches.LineSearchException{typeof(state.alpha)}).alpha : ex2.alpha
                 false
             else
                 rethrow()

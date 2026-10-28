@@ -219,12 +219,14 @@ function Base.show(io::IO, ::MIME"text/plain", o::Options)
 end
 
 function print_header(options::Options)
+    _NUMERIC_EXPORT_MODE && return nothing
     if options.show_trace
         @printf "Iter     Function value   Gradient norm \n"
     end
 end
 
 function print_header(method::AbstractOptimizer)
+    _NUMERIC_EXPORT_MODE && return nothing
     @printf "Iter     Function value   Gradient norm \n"
 end
 

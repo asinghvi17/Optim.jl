@@ -305,6 +305,7 @@ function _symmetric_rank2_update!(H::AbstractMatrix, s::AbstractVector, w::Abstr
 end
 
 function trace!(tr, d, state::BFGSState, iteration::Integer, method::BFGS, options::Options, curr_time = time())
+    _NUMERIC_EXPORT_MODE && return nothing
     dt = Dict()
     dt["time"] = curr_time
     if options.extended_trace

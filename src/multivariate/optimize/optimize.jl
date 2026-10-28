@@ -97,7 +97,7 @@ function optimize(
         # Validate the trial iterate and commit candidate -> state for migrated
         # solvers. No-op for solvers that mutate state.x/f_x/g_x directly.
         if !accept_step!(d, state, method, options)
-            options.show_warnings && @warn "Terminated early: trial iterate had non-finite values."
+            !_NUMERIC_EXPORT_MODE && options.show_warnings && @warn "Terminated early: trial iterate had non-finite values."
             ls_success = false
             break
         end
@@ -150,11 +150,11 @@ function optimize(
         end
 
         if hasproperty(state, :g_x) && !all(isfinite, state.g_x)
-            options.show_warnings && @warn "Terminated early due to NaN in gradient."
+            !_NUMERIC_EXPORT_MODE && options.show_warnings && @warn "Terminated early due to NaN in gradient."
             break
         end
         if hasproperty(state, :H_x) && !all(isfinite, state.H_x)
-            options.show_warnings && @warn "Terminated early due to NaN in Hessian."
+            !_NUMERIC_EXPORT_MODE && options.show_warnings && @warn "Terminated early due to NaN in Hessian."
             break
         end
     end # while

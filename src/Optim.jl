@@ -16,6 +16,9 @@ documentation online at http://julianlsolvers.github.io/Optim.jl/stable/ .
 """
 module Optim
 
+# Optional no-diagnostic Float64 export policy; not a general solver semantic change.
+const _NUMERIC_EXPORT_MODE = get(ENV,"OPTIM_NUMERIC_EXPORT","0") == "1"
+
 import ADTypes
 
 using PositiveFactorizations: Positive # for globalization strategy in Newton
