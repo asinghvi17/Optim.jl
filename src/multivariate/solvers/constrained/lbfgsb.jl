@@ -936,7 +936,7 @@ function (φ::LBFGSBLineFn)(α)
     return (fα, dot(gα, φ.dir))
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     l::AbstractArray,
     u::AbstractArray,
@@ -944,16 +944,17 @@ function optimize(
     method::LBFGSB,
     options::Options = Options();
     inplace::Bool = true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     if f isa NonDifferentiable
         f = f.f
     end
-    od = OnceDifferentiable(f, x0, zero(eltype(x0)); inplace, autodiff)
+    od = OnceDifferentiable(f, x0, zero(eltype(x0)); inplace, autodiff, specialize)
     optimize(od, l, u, x0, method, options)
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     l::AbstractArray,
@@ -962,13 +963,14 @@ function optimize(
     method::LBFGSB,
     options::Options = Options();
     inplace::Bool = true,
+    specialize::Bool = false,
 )
     g! = inplace ? g : (G, x) -> copyto!(G, g(x))
-    od = OnceDifferentiable(f, g!, x0, zero(eltype(x0)))
+    od = OnceDifferentiable(f, g!, x0, zero(eltype(x0)); specialize)
     optimize(od, l, u, x0, method, options)
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     d::OnceDifferentiable,
     l::AbstractArray,
     u::AbstractArray,

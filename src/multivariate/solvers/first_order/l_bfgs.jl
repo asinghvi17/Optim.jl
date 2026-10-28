@@ -79,13 +79,13 @@ function twoloop!(
     return
 end
 
-struct LBFGS{T,IL,L,Tprep} <: FirstOrderOptimizer
+struct LBFGS{T,IL,L,Tprep,TM<:Manifold} <: FirstOrderOptimizer
     m::Int
     alphaguess!::IL
     linesearch!::L
     P::T
     precondprep!::Tprep
-    manifold::Manifold
+    manifold::TM
     scaleinvH0::Bool
 end
 """
@@ -135,7 +135,7 @@ end
 
 Base.summary(io::IO, ::LBFGS) = print(io, "L-BFGS")
 
-mutable struct LBFGSState{Tx,Tdx,Tdg,T,G} <: AbstractOptimizerState
+mutable struct LBFGSState{Tx,Tdx,Tdg,T,G,Tq,Ta} <: AbstractOptimizerState
     x::Tx
     g_x::G
     f_x::T
@@ -148,8 +148,8 @@ mutable struct LBFGSState{Tx,Tdx,Tdg,T,G} <: AbstractOptimizerState
     dg::Tx
     u::Tx
     f_x_previous::T
-    twoloop_q::Any
-    twoloop_alpha::Any
+    twoloop_q::Tq
+    twoloop_alpha::Ta
     pseudo_iteration::Int
     s::Tx
     # Trial iterate produced by update_state! / update_fgh!. Committed to

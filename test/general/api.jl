@@ -284,3 +284,21 @@ end
     @test !Optim.converged(res2)
     @test !Optim.converged(res3)
 end
+
+@testset "specialize keyword forwarding" begin
+    f(x) = sum(abs2, x)
+    g!(g, x) = (g .= 2 .* x; nothing)
+    fg!(F, G, x) = (G === nothing || g!(G, x); F === nothing ? nothing : f(x))
+    h!(h, x) = (copyto!(h, 2I); nothing)
+    fgh!(F, G, H, x) = (H === nothing || h!(H, x); fg!(F, G, x))
+    for specialize in (false, true), method in (BFGS(), LBFGS(), Newton())
+        for args in ((f,), (f, g!), (f, g!, h!),
+                     (method isa Optim.SecondOrderOptimizer ? NLSolversBase.only_fgh!(fgh!) : NLSolversBase.only_fg!(fg!),))
+            result = optimize(args..., [1.0, 2.0], method; specialize)
+            @test Optim.minimum(result) < 1e-7
+        end
+        d = Optim.promote_objtype(method, [1.0, 2.0], AutoFiniteDiff(), true, f, g!; specialize)
+        @test fieldtype(typeof(d), :f) === (specialize ? typeof(f) : Any)
+        @test Optim.promote_objtype(method, [1.0, 2.0], AutoFiniteDiff(), true, d; specialize = !specialize) === d
+    end
+end

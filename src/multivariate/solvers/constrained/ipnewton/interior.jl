@@ -221,6 +221,7 @@ function optimize(
     method::ConstrainedOptimizer,
     options::Options = Options(; default_options(method)...);
     inplace::Bool = true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     # `inplace` is accepted (and has no effect here) so that calls with keyword
@@ -228,9 +229,9 @@ function optimize(
     twicediffed = if d isa TwiceDifferentiable
         d
     elseif d isa Union{InplaceObjective,NotInplaceObjective}
-        TwiceDifferentiable(d, x0)
+        TwiceDifferentiable(d, x0; specialize)
     else
-        TwiceDifferentiable(d, x0; autodiff)
+        TwiceDifferentiable(d, x0; autodiff, specialize)
     end
 
     bounds = ConstraintBounds(lower, upper, [], [])

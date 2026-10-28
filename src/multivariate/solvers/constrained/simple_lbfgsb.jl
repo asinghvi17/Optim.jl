@@ -347,12 +347,13 @@ function Optim.optimize(
     method::SimpleLBFGSB,
     options::Optim.Options = Optim.Options();
     inplace::Bool = true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = Optim.DEFAULT_AD_TYPE,
 )
     if f isa NonDifferentiable
         f = f.f
     end
-    od = OnceDifferentiable(f, x0, zero(eltype(x0)); inplace, autodiff)
+    od = OnceDifferentiable(f, x0, zero(eltype(x0)); inplace, autodiff, specialize)
     Optim.optimize(od, l, u, x0, method, options)
 end
 
@@ -365,9 +366,10 @@ function Optim.optimize(
     method::SimpleLBFGSB,
     options::Optim.Options = Optim.Options();
     inplace::Bool = true,
+    specialize::Bool = false,
 )
     g! = inplace ? g : (G, x) -> copyto!(G, g(x))
-    od = OnceDifferentiable(f, g!, x0, zero(eltype(x0)))
+    od = OnceDifferentiable(f, g!, x0, zero(eltype(x0)); specialize)
     Optim.optimize(od, l, u, x0, method, options)
 end
 

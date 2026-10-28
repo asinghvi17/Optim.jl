@@ -7,10 +7,10 @@ end
 
 Base.summary(io::IO, ::IPNewton) = print(io, "Interior Point Newton")
 
-promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f::TwiceDifferentiable) = f
-promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f) =
+Base.@constprop :aggressive promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f::TwiceDifferentiable; specialize::Bool = false) = f
+Base.@constprop :aggressive promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f; specialize::Bool = false) =
     TwiceDifferentiable(f, x, real(zero(eltype(x))); autodiff = autodiff)
-promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f, g) = TwiceDifferentiable(
+Base.@constprop :aggressive promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f, g; specialize::Bool = false) = TwiceDifferentiable(
     f,
     g,
     x,
@@ -18,7 +18,7 @@ promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::
     inplace = inplace,
     autodiff = autodiff,
 )
-promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f, g, h) =
+Base.@constprop :aggressive promote_objtype(method::IPNewton, x, autodiff::ADTypes.AbstractADType, inplace::Bool, f, g, h; specialize::Bool = false) =
     TwiceDifferentiable(f, g, h, x, real(zero(eltype(x))); inplace = inplace)
 
 # TODO: Add support for InitialGuess from LineSearches
@@ -439,7 +439,7 @@ function gf(bounds::ConstraintBounds, state)
 end
 gf(constraints, state) = gf(constraints.bounds, state)
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     lower::AbstractArray,
@@ -448,12 +448,13 @@ function optimize(
     method::IPNewton,
     options::Options = Options(; default_options(method)...);
     inplace::Bool = true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
-    d = TwiceDifferentiable(f, g, x0; inplace, autodiff)
+    d = TwiceDifferentiable(f, g, x0; inplace, autodiff, specialize)
     optimize(d, lower, upper, x0, method, options)
 end
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     h,
@@ -463,13 +464,14 @@ function optimize(
     method::IPNewton = IPNewton(),
     options::Options = Options(; default_options(method)...);
     inplace::Bool = true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     # `autodiff` is accepted for a uniform interface; the Hessian is given
-    d = TwiceDifferentiable(f, g, h, x0; inplace)
+    d = TwiceDifferentiable(f, g, h, x0; inplace, specialize)
     optimize(d, lower, upper, x0, method, options)
 end
-function optimize(
+Base.@constprop :aggressive function optimize(
     d::TwiceDifferentiable,
     lower::AbstractArray,
     upper::AbstractArray,

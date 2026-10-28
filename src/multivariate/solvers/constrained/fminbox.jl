@@ -262,7 +262,7 @@ function initial_mu(box::BoxBarrier, x::AbstractArray, g_x::AbstractArray, F::Fm
     return mu
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     l::AbstractArray,
     u::AbstractArray,
@@ -270,16 +270,17 @@ function optimize(
     F::Fminbox = Fminbox(),
     options::Options = Options();
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     if f isa NonDifferentiable
         f = f.f
     end
-    od = OnceDifferentiable(f, x0, zero(eltype(x0)); inplace, autodiff)
+    od = OnceDifferentiable(f, x0, zero(eltype(x0)); inplace, autodiff, specialize)
     optimize(od, l, u, x0, F, options)
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     l::AbstractArray,
@@ -288,18 +289,19 @@ function optimize(
     F::Fminbox = Fminbox(),
     options::Options = Options();
     inplace::Bool = true,
+    specialize::Bool = false,
 )
 
     g! = inplace ? g : (G, x) -> copyto!(G, g(x))
-    od = OnceDifferentiable(f, g!, x0, zero(eltype(x0)))
+    od = OnceDifferentiable(f, g!, x0, zero(eltype(x0)); specialize)
 
     optimize(od, l, u, x0, F, options)
 end
 
-function optimize(f, l::Number, u::Number, x0::AbstractArray; autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE)
+Base.@constprop :aggressive function optimize(f, l::Number, u::Number, x0::AbstractArray; autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE, specialize::Bool = false)
     T = eltype(x0)
     optimize(
-        OnceDifferentiable(f, x0, zero(T); autodiff),
+        OnceDifferentiable(f, x0, zero(T); autodiff, specialize),
         Fill(T(l), size(x0)...),
         Fill(T(u), size(x0)...),
         x0,
@@ -308,7 +310,7 @@ function optimize(f, l::Number, u::Number, x0::AbstractArray; autodiff::ADTypes.
     )
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     l::Number,
     u::Number,
@@ -316,6 +318,7 @@ function optimize(
     mo::AbstractConstrainedOptimizer,
     opt::Options = Options();
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     T = eltype(x0)
@@ -327,10 +330,11 @@ function optimize(
         mo,
         opt;
         inplace,
+        specialize,
         autodiff,
     )
 end
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     l::AbstractArray,
     u::Number,
@@ -338,12 +342,13 @@ function optimize(
     mo::AbstractConstrainedOptimizer = Fminbox(),
     opt::Options = Options();
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
   T = eltype(x0)
-optimize(f, T.(l), Fill(T(u), size(x0)...), x0, mo, opt; inplace, autodiff)
+optimize(f, T.(l), Fill(T(u), size(x0)...), x0, mo, opt; inplace, autodiff, specialize)
 end
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     l::Number,
     u::AbstractArray,
@@ -351,12 +356,13 @@ function optimize(
     mo::AbstractConstrainedOptimizer=Fminbox(),
     opt::Options = Options();
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     T = eltype(x0)
-    optimize(f, Fill(T(l), size(x0)...), T.(u), x0, mo, opt; inplace, autodiff)
+    optimize(f, Fill(T(l), size(x0)...), T.(u), x0, mo, opt; inplace, autodiff, specialize)
 end
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     l::Number,
@@ -364,6 +370,7 @@ function optimize(
     x0::AbstractArray,
     opt::Options;
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 ) 
 
@@ -377,10 +384,11 @@ optimize(
     Fminbox(),
     opt;
     inplace,
+    specialize,
     autodiff,
 )
 end
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     l::AbstractArray,
@@ -388,13 +396,14 @@ function optimize(
     x0::AbstractArray,
     opt::Options;
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
 T = eltype(x0)
-optimize(f, g, T.(l), Fill(T(u), size(x0)...), x0, opt; inplace, autodiff)
+optimize(f, g, T.(l), Fill(T(u), size(x0)...), x0, opt; inplace, autodiff, specialize)
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     f,
     g,
     l::Number,
@@ -402,13 +411,14 @@ function optimize(
     x0::AbstractArray,
     opt::Options;
     inplace::Bool=true,
+    specialize::Bool = false,
     autodiff::ADTypes.AbstractADType = DEFAULT_AD_TYPE,
 )
     T= eltype(x0)
-    optimize(f, g, Fill(T(l), size(x0)...), T.(u), x0, opt; inplace, autodiff)
+    optimize(f, g, Fill(T(l), size(x0)...), T.(u), x0, opt; inplace, autodiff, specialize)
 end
 
-function optimize(
+Base.@constprop :aggressive function optimize(
     df::OnceDifferentiable,
     l::AbstractArray,
     u::AbstractArray,

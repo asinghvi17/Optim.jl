@@ -64,14 +64,15 @@ function optimize(
     ub::AbstractArray,
     x0::AbstractArray{Tx},
     method::SAMIN,
-    options::Options = Options(),
+    options::Options = Options();
+    specialize::Bool = false,
 ) where {Tx}
     (; callback) = options
     time0 = time() # Initial time stamp used to control early stopping by options.time_limit
 
     hline = "="^80
     x = copy(x0)
-    d = NonDifferentiable(obj_fn, x)
+    d = NonDifferentiable(obj_fn, x; specialize)
     f_x = value!(d, x)
 
     tr = OptimizationTrace{typeof(f_x),typeof(method)}()
