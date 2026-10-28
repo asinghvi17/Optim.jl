@@ -73,7 +73,7 @@ function perform_linesearch!(state, method, d)
         _linesearch_moved_x(state)
     catch ex
         if ex isa LineSearches.LineSearchException
-            state.alpha = ex.alpha
+            state.alpha = _linesearch_exception_alpha(ex, state.alpha, method.linesearch!)
             false
         else
             rethrow()
@@ -90,7 +90,7 @@ function perform_linesearch!(state, method, d)
             _linesearch_moved_x(state)
         catch ex2
             if ex2 isa LineSearches.LineSearchException
-                state.alpha = ex2.alpha
+                state.alpha = _linesearch_exception_alpha(ex2, state.alpha, method.linesearch!)
                 false
             else
                 rethrow()
@@ -105,4 +105,15 @@ function perform_linesearch!(state, method, d)
     end
 
     return lssuccess
+end
+
+# BackTracking can promote the step via maxstep and its interpolation constants.
+# Preserve the field assignment's conversion (including Float64 -> Float32).
+_linesearch_exception_alpha(ex, alpha, ls) = ex.alpha
+function _linesearch_exception_alpha(
+    ex::LineSearches.LineSearchException,
+    alpha::T,
+    ls::LineSearches.BackTracking{S},
+) where {T<:AbstractFloat,S<:AbstractFloat}
+    return ex.alpha::Union{T,promote_type(T,S)}
 end

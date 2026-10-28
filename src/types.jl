@@ -60,7 +60,7 @@ than against `‖g‖∞`. The two coincide only when no bound is active.
 For more information on individual options, see the documentation at
 <http://julianlsolvers.github.io/Optim.jl/stable/user/config>.
 """
-struct Options{T, TCallback}
+struct Options{T, TCallback, STATIC}
     x_abstol::T
     x_reltol::T
     f_abstol::T
@@ -87,6 +87,17 @@ struct Options{T, TCallback}
     show_every::Int
     callback::TCallback
     time_limit::Float64
+end
+Options(args::Vararg{Any,N}) where {N} = Options{typeof(args[1]),typeof(args[end-1]),nothing}(args...)
+Options{T,CB}(args::Vararg{Any,N}) where {T,CB,N} = Options{T,CB,nothing}(args...)
+function freeze_options(o::Options{T,CB}) where {T,CB}
+    names=fieldnames(typeof(o))
+    flags=(:store_trace,:show_trace,:extended_trace,:show_warnings,:trace_simplex)
+    static=NamedTuple{flags}(Tuple(getfield(o,n) for n in flags))
+    Options{T,CB,static}(Tuple(getfield(o,n) for n in names)...)
+end
+@inline function Base.getproperty(o::Options{T,CB,STATIC},key::Symbol) where {T,CB,STATIC}
+    STATIC !== nothing && haskey(STATIC,key) ? getproperty(STATIC,key) : getfield(o,key)
 end
 
 function Options(;

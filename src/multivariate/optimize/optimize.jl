@@ -71,7 +71,7 @@ function optimize(
 
     options.show_trace && print_header(method)
     _time = time()
-    trace!(tr, d, state, iteration, method, options, _time - t0)
+    tracing && trace!(tr, d, state, iteration, method, options, _time - t0)
     # callbacks can stop routine early by returning true
     stopped_by_callback = callback !== nothing && callback(state)
     stopped |= stopped_by_callback
